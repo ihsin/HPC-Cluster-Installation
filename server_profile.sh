@@ -129,9 +129,33 @@ EOF
 yum clean all
 yum repolist
 
-scp CentOS-Base.repo cp01:/etc/yum.repos.d/
+ssh cp01 "rm -rf /etc/yum.repos.d/*"
+scp /etc/yum.repos.d/CentOS-base.repo cp01:/etc/yum.repos.d/
 #scp CentOS-Base.repo cp02:/etc/yum.repos.d/
 
-echo -e "y\n"|yum install nfs-utils.x86_64
+ssh cp01 "rpm -ivh '${RPM_REPO}'/ftp-0.17-67.el7.x86_64.rpm' && yum clean all"
 
-ssh cp01 "echo -e 'y\n'|yum install nfs-utils.x86_64"
+ssh cp01 "echo -e 'y\n'|yum install nfs-utils.x86_64 \
+&& systemctl start rpcbind \
+&& systemctl enable rpcbind \
+&& systemctl start nfs \
+&& systemctl enable nfs \
+&& mkdir -p /glb/home"
+
+mkdir -p /glb/home
+
+cat <<EOF > /etc/exports
+/glb/home *(rw,sync)
+EOF
+
+exportfs -a
+
+systemctl start rpcbind
+systemctl enable rpcbind
+
+systemctl start nfs
+systemctl enable nfs
+
+ssh cp01 "mount sp:/glb/home /glb/home"
+#ssh cp02 "systemctl start rpcbind && systemctl enable nfs && mount sp:/glb/home /glb/home"
+
