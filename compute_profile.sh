@@ -67,4 +67,3 @@ EOF
 
 ping -c 1 sp
 
-#reboot
