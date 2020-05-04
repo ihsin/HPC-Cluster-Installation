@@ -135,13 +135,14 @@ scp /etc/yum.repos.d/CentOS-base.repo cp01:/etc/yum.repos.d/
 
 ssh cp01 "rpm -ivh '${RPM_REPO}'/ftp-0.17-67.el7.x86_64.rpm' && yum clean all"
 
-ssh cp01 "echo -e 'y\n'|yum install nfs-utils.x86_64 \
+ssh cp01 "yum -y install nfs-utils.x86_64 \
 && systemctl start rpcbind \
 && systemctl enable rpcbind \
 && systemctl start nfs \
 && systemctl enable nfs \
 && mkdir -p /glb/home"
 
+yum -y install nfs-utils.x86_64
 mkdir -p /glb/home
 
 cat <<EOF > /etc/exports
