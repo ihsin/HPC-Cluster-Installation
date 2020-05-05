@@ -108,7 +108,7 @@ else
 	exit 1
 fi
 
-systemctl start vsftpd
+systemctl restart vsftpd
 systemctl enable vsftpd
 
 cp -r "${RPM_REPO}" ${FTP_ROOT}
@@ -133,16 +133,25 @@ ssh cp01 "rm -rf /etc/yum.repos.d/*"
 scp /etc/yum.repos.d/CentOS-base.repo cp01:/etc/yum.repos.d/
 #scp CentOS-Base.repo cp02:/etc/yum.repos.d/
 
-ssh cp01 "rpm -ivh '${RPM_REPO}'/ftp-0.17-67.el7.x86_64.rpm' && yum clean all"
+ssh cp01 "rpm -ivh '${RPM_REPO}'/ftp-0.17-67.el7.x86_64.rpm && yum clean all"
 
 ssh cp01 "yum -y install nfs-utils.x86_64 \
-&& systemctl start rpcbind \
+&& systemctl restart rpcbind \
 && systemctl enable rpcbind \
-&& systemctl start nfs \
-&& systemctl enable nfs \
-&& mkdir -p /glb/home"
+&& systemctl restart nfs \
+&& systemctl enable nfs"
+
+ssh cp01 "if [ -d /glb ];
+then
+rm -rf /glb
+fi \
+&& mkdir /glb"
 
 yum -y install nfs-utils.x86_64
+
+if [ -d /glb ];then
+rm -rf /glb
+fi
 mkdir -p /glb/home
 
 cat <<EOF > /etc/exports
@@ -151,12 +160,20 @@ EOF
 
 exportfs -a
 
-systemctl start rpcbind
+systemctl restart rpcbind
 systemctl enable rpcbind
 
-systemctl start nfs
+systemctl restart nfs
 systemctl enable nfs
 
-ssh cp01 "mount sp:/glb/home /glb/home"
+#ssh cp01 "mount sp:/glb/home /glb/home"
 #ssh cp02 "systemctl start rpcbind && systemctl enable nfs && mount sp:/glb/home /glb/home"
 
+ssh cp01 "yum install -y autofs.x86_64 \
+&& sed -i 's/\/misc/\/glb/' /etc/auto.master \
+&& sed -i 's/auto.misc/auto.home/' /etc/auto.master \
+&& cat <<EOF > /etc/auto.home
+home	-fstype=nfs,rw,soft,intr    sp:/glb/home
+EOF"
+
+ssh cp01 "systemctl restart autofs && systemctl enable autofs"
