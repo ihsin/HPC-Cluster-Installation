@@ -65,5 +65,5 @@ Host *
         StrictHostKeyChecking no
 EOF
 
-ping -c 1 sp
+#ping -c 1 sp
 
