@@ -3,6 +3,7 @@
 
 SElinux="/etc/sysconfig/selinux"
 HOST_NAME="/etc/hostname"
+NIS_DOMAIN="/etc/sysconfig/network"
 HOST_ONLY_CON="/etc/sysconfig/network-scripts/ifcfg-ens33"
 NAT_CON="/etc/sysconfig/network-scripts/ifcfg-ens34"
 DNS="/etc/hosts"
@@ -177,3 +178,26 @@ home	-fstype=nfs,rw,soft,intr    sp:/glb/home
 EOF"
 
 ssh cp01 "systemctl restart autofs && systemctl enable autofs"
+
+yum -y install ypserv.x86_64
+
+nisdomainname nisDC
+
+cat <<EOF > ${NIS_DOMAIN}
+NISDOMAIN=nisDC
+EOF
+
+systemctl restart ypserv
+systemctl enable ypserv
+systemctl restart yppasswdd
+systemctl enable yppasswdd
+
+echo -e "y\n"|/usr/lib64/yp/ypinit -m
+
+ssh cp01 "yum -y install ypbind.x86_64 \
+&& authconfig --enablenis --nisdomain=nisDC --nisserver=sp --update \
+&& systemctl restart ypbind \
+&& systemctl enable ypbind"
+
+useradd -d /glb/home/inrspd inrspd
+make -C /var/yp/
