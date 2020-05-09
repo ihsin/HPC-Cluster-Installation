@@ -136,6 +136,14 @@ scp /etc/yum.repos.d/CentOS-base.repo cp01:/etc/yum.repos.d/
 
 ssh cp01 "rpm -ivh '${RPM_REPO}'/ftp-0.17-67.el7.x86_64.rpm && yum clean all"
 
+#Add epel to yum
+wget --no-check-certificate https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+cat <<EOF >> /etc/yum.conf
+sslverify=false
+EOF
+rpm -ivh epel-release-latest-7.noarch.rpm
+yum repolist
+
 ssh cp01 "yum -y install nfs-utils.x86_64 \
 && systemctl restart rpcbind \
 && systemctl enable rpcbind \
