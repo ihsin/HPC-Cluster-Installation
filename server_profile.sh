@@ -96,34 +96,34 @@ Host *
 EOF
 
 statusUpdate 'pinging' 'cp01'
-ping -c 1 cp01
+ping -c 1 cp01  1> /dev/null 2>&1
 
 statusUpdate 'Copying ssh-keys to' 'cp01'
 if [ $? -eq 0 ]; then
 cat ~/.ssh/id_rsa.pub | ssh cp01 "chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
-ssh-add
+ssh-add  1> /dev/null 2>&1
 ssh cp01 cat /root/.ssh/id_rsa.pub>>${AUTH_KEYS}
 else
 echo "\n Error connecting to cp01 \n"
 fi
 
 statusUpdate 'pinging' 'cp02'
-ping -c 1 cp02
+ping -c 1 cp02  1> /dev/null 2>&1
 
 if [ $? -eq 0 ]; then
 cat ~/.ssh/id_rsa.pub | ssh cp02 "chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
-ssh-add
+ssh-add  1> /dev/null 2>&1
 ssh cp02 cat /root/.ssh/id_rsa.pub>>${AUTH_KEYS}
 else
 echo "\n Error connecting to cp02 \n"
 fi
 
-scp ~/.ssh/authorized_keys cp01:/root/.ssh
+scp ~/.ssh/authorized_keys cp01:/root/.ssh  1> /dev/null 2>&1
 #scp ~/.ssh/authorized_keys cp02:/root/.ssh
 
 statusUpdate 'Installing' 'vsftpd'
 if [ -d "${RPM_REPO}" ];then
-        rpm -ivh "${RPM_REPO}/vsftpd-3.0.2-22.el7.x86_64.rpm"
+        rpm -ivh "${RPM_REPO}/vsftpd-3.0.2-22.el7.x86_64.rpm"  1> /dev/null 2>&1
 else
 	exit 1
 fi
@@ -136,7 +136,7 @@ statusUpdate 'copying rpms repository to' 'ftp root'
 cp -r "${RPM_REPO}" ${FTP_ROOT}
 
 statusUpdate 'creating' 'base repolist'
-rpm -ivh "${RPM_REPO}/createrepo-0.9.9-28.el7.noarch.rpm"
+rpm -ivh "${RPM_REPO}/createrepo-0.9.9-28.el7.noarch.rpm"  1> /dev/null 2>&1
 createrepo ${FTP_ROOT}
 
 rm -rf /etc/yum.repos.d/*
@@ -149,12 +149,12 @@ gpgcheck=0
 enabled=1
 EOF
 
-yum clean all
-yum repolist
+yum clean all 1> /dev/null 2>&1
+yum repolist 1> /dev/null 2>&1
 
 statusUpdate 'copying' 'repolist to cp01'
 ssh cp01 "rm -rf /etc/yum.repos.d/*"
-scp /etc/yum.repos.d/CentOS-base.repo cp01:/etc/yum.repos.d/
+scp /etc/yum.repos.d/CentOS-base.repo cp01:/etc/yum.repos.d/ 1> /dev/null 2>&1
 #scp CentOS-Base.repo cp02:/etc/yum.repos.d/
 
 statusUpdate 'installing' 'ftp on cp01'
@@ -166,8 +166,8 @@ wget --no-check-certificate https://dl.fedoraproject.org/pub/epel/epel-release-l
 cat <<EOF >> /etc/yum.conf
 sslverify=false
 EOF
-rpm -ivh epel-release-latest-7.noarch.rpm
-yum repolist
+rpm -ivh epel-release-latest-7.noarch.rpm 1> /dev/null 2>&1
+yum repolist 1> /dev/null 2>&1
 
 statusUpdate 'installing' 'nfs on cp01'
 ssh cp01 "yum -y install nfs-utils.x86_64 \
@@ -183,7 +183,7 @@ fi \
 && mkdir /glb"
 
 statusUpdate 'installing' 'nfs'
-yum -y install nfs-utils.x86_64
+yum -y install nfs-utils.x86_64 1> /dev/null 2>&1
 if [ -d /glb ];then
 rm -rf /glb
 fi
@@ -217,7 +217,7 @@ EOF"
 ssh cp01 "systemctl restart autofs && systemctl enable autofs"
 
 statusUpdate 'installing and configuraing' 'nis'
-yum -y install ypserv.x86_64
+yum -y install ypserv.x86_64 1> /dev/null 2>&1
 nisdomainname nisDC
 cat <<EOF > ${NIS_DOMAIN}
 NISDOMAIN=nisDC
@@ -229,7 +229,7 @@ systemctl restart yppasswdd
 systemctl enable yppasswdd
 
 statusUpdate 'making it' 'master or domain controller'
-echo -e "y\n"|/usr/lib64/yp/ypinit -m
+echo -e "y\n"|/usr/lib64/yp/ypinit -m 1> /dev/null 2>&1
 
 ssh cp01 "yum -y install ypbind.x86_64 \
 && authconfig --enablenis --nisdomain=nisDC --nisserver=sp --update \
@@ -238,4 +238,4 @@ ssh cp01 "yum -y install ypbind.x86_64 \
 
 statusUpdate 'adding user and invoking' 'make'
 useradd -d /glb/home/inrspd inrspd
-make -C /var/yp/
+make -C /var/yp/ 1> /dev/null 2>&1
