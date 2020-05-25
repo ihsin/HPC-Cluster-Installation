@@ -1,5 +1,22 @@
 #!/bin/bash
 
+USAGE=$(cat <<-EOF
+
+${0} sets up the compute or server node
+for the HPC cluster.
+
+NOTE: After running this script make 
+sure you run the master node script 
+on the VM which you want to configure
+as a master node.
+EOF
+)
+
+if [ $# -gt 0 ];then
+echo $USAGE
+exit 0
+fi
+
 function statusUpdate() {
  echo -e "${1}"" ""${2}..."
 }
