@@ -1,5 +1,22 @@
 #!/bin/sh
 
+USAGE=$(cat <<-EOF
+
+${0} sets up the master or admin node
+for the HPC cluster.
+
+NOTE: Before running this script make 
+sure you run the compute node script 
+on the VM which you want to configure
+as a compute node.
+EOF
+)
+
+if [ $# -gt 0 ];then
+echo $USAGE
+exit 0
+fi
+
 function statusUpdate() {
  echo -e "${1}"" ""${2}..."
 }
