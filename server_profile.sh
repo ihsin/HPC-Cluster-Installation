@@ -180,9 +180,15 @@ ssh cp01 "rpm -ivh '${RPM_REPO}'/ftp-0.17-67.el7.x86_64.rpm && yum clean all"
 statusUpdate 'adding' 'epel repolist'
 #Add epel to yum
 wget --no-check-certificate https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+
+sed -i 's/^sslverify=.*/sslverify=false/g' /etc/yum.conf
+
+if [ -z $(cat /etc/yum.conf |egrep ^sslverify) ];then
 cat <<EOF >> /etc/yum.conf
 sslverify=false
 EOF
+fi
+
 rpm -ivh epel-release-latest-7.noarch.rpm 1> /dev/null 2>&1
 yum repolist 1> /dev/null 2>&1
 
@@ -256,3 +262,14 @@ ssh cp01 "yum -y install ypbind.x86_64 \
 statusUpdate 'adding user and invoking' 'make'
 useradd -d /glb/home/inrspd inrspd
 make -C /var/yp/ 1> /dev/null 2>&1
+
+
+read -p "Install Nagios? (y/N)? " choice
+case "$choice" in 
+y|Y ) nagios=1;;
+* ) echo "WARN: Skipping Nagios Installation";;
+esac
+
+if [ ! -z $nagios ];then
+echo $nagios
+fi
