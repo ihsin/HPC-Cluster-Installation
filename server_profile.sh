@@ -261,17 +261,33 @@ ssh cp01 "yum -y install ypbind.x86_64 \
 && systemctl enable ypbind"
 
 statusUpdate 'adding user and invoking' 'make'
-useradd -d /glb/home/inrspd inrspd
 make -C /var/yp/ 1> /dev/null 2>&1
 
 
-read -p "Install Nagios? (y/N)? " choice
+read -p "Install LSF? (y/N)? " choice
 case "$choice" in 
-y|Y ) nagios=1;;
+y|Y ) lsf=1;;
 * ) echo "WARN: Skipping Nagios Installation";;
 esac
 
-if [ ! -z $nagios ];then
-echo $nagios
+if [ ! -z $lsf ];then
+if [ ! -f "$HOME/lsf10.1_no_jre_lsfinstall.tar.Z" ]; then
+echo -e "Error: LSF bundle missing in root directory\n"
+else
+useradd -d /glb/home/lsfadmin lsfadmin
+make -C /var/yp/ 1> /dev/null 2>&1
+yum -y install java-1.8.0-openjdk.x86_64
+tar -xzf $HOME/lsf10.1_no_jre_lsfinstall.tar.Z
+mv $HOME/lsf10.1_lsfinstall/install.config $HOME/lsf10.1_lsfinstall/install.config.sample
+cat <<EOF > $HOME/lsf10.1_lsfinstall/install.config
+LSF_TOP="/glb/apps/lsf"
+LSF_ADMINS="lsfadmin"
+LSF_CLUSTER_NAME="VMWare_Cluster"
+LSF_MASTER_LIST="sp"
+LSF_ENTITLEMENT_FILE="$HOME/lsf_std_entitlement_10.1.dat"
+LSF_ADD_SERVERS=“cp01"
+LSF_ADD_CLIENTS=“cp01“
+LSF_QUIET_INST="Y"
+EOF
 fi
-
+fi
