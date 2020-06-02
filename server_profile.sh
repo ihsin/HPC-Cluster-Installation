@@ -1,10 +1,8 @@
 #!/bin/sh
 
 USAGE=$(cat <<-EOF
-
 ${0} sets up the master or admin node
 for the HPC cluster.
-
 NOTE: Before running this script make 
 sure you run the compute node script 
 on the VM which you want to configure
@@ -211,10 +209,12 @@ if [ -d /glb ];then
 rm -rf /glb
 fi
 mkdir -p /glb/home
+mkdir -p /glb/apps
 
-statusUpdate 'exporting' '/glb/home'
+statusUpdate 'exporting' '/glb/home & /glb/apps'
 cat <<EOF > /etc/exports
 /glb/home *(rw,sync)
+/glb/apps *(rw,sync)
 EOF
 
 exportfs -a
@@ -229,12 +229,13 @@ systemctl enable nfs
 #ssh cp01 "mount sp:/glb/home /glb/home"
 #ssh cp02 "systemctl start rpcbind && systemctl enable nfs && mount sp:/glb/home /glb/home"
 
-statusUpdate 'installing autofs and mounting' '/glb/home on cp01'
+statusUpdate 'installing autofs and mounting' '/glb/home & /glb/apps on cp01'
 ssh cp01 "yum install -y autofs.x86_64 \
 && sed -i 's/\/misc/\/glb/' /etc/auto.master \
 && sed -i 's/auto.misc/auto.home/' /etc/auto.master \
 && cat <<EOF > /etc/auto.home
 home	-fstype=nfs,rw,soft,intr    sp:/glb/home
+apps	-fstype=nfs,rw,soft,intr    sp:/glb/apps
 EOF"
 
 ssh cp01 "systemctl restart autofs && systemctl enable autofs"
@@ -273,3 +274,4 @@ esac
 if [ ! -z $nagios ];then
 echo $nagios
 fi
+
