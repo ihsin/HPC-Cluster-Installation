@@ -138,7 +138,8 @@ scp ~/.ssh/authorized_keys cp01:/root/.ssh  1> /dev/null 2>&1
 
 statusUpdate 'Installing' 'vsftpd'
 if [ -d "${RPM_REPO}" ];then
-        rpm -ivh "${RPM_REPO}/vsftpd-3.0.2-22.el7.x86_64.rpm"  1> /dev/null 2>&1
+	vsftpd=$(ls "${RPM_REPO}"|grep vsftpd)
+        rpm -ivh "${RPM_REPO}/${vsftpd}"  1> /dev/null 2>&1
 else
 	exit 1
 fi
@@ -151,7 +152,8 @@ statusUpdate 'copying rpms repository to' 'ftp root'
 cp -r "${RPM_REPO}" ${FTP_ROOT}
 
 statusUpdate 'creating' 'base repolist'
-rpm -ivh "${RPM_REPO}/createrepo-0.9.9-28.el7.noarch.rpm"  1> /dev/null 2>&1
+createrepo=$(ls "${RPM_REPO}"|grep createrepo)
+rpm -ivh "${RPM_REPO}/${createrepo}"  1> /dev/null 2>&1
 createrepo ${FTP_ROOT}
 
 rm -rf /etc/yum.repos.d/*
@@ -173,7 +175,8 @@ scp /etc/yum.repos.d/CentOS-base.repo cp01:/etc/yum.repos.d/ 1> /dev/null 2>&1
 #scp CentOS-Base.repo cp02:/etc/yum.repos.d/
 
 statusUpdate 'installing' 'ftp on cp01'
-ssh cp01 "rpm -ivh '${RPM_REPO}'/ftp-0.17-67.el7.x86_64.rpm && yum clean all"
+ftp=$(ls "${RPM_REPO}"|grep ftp)
+ssh cp01 "rpm -ivh '${RPM_REPO}'/${ftp} && yum clean all"
 
 statusUpdate 'adding' 'epel repolist'
 #Add epel to yum
