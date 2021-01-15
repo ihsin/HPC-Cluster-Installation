@@ -26,6 +26,7 @@ NIS_DOMAIN="/etc/sysconfig/network"
 HOST_ONLY_CON="/etc/sysconfig/network-scripts/ifcfg-ens33"
 NAT_CON="/etc/sysconfig/network-scripts/ifcfg-ens34"
 DNS="/etc/hosts"
+PROXY="/etc/squid.conf"
 SSH_CONFIG="/root/.ssh/config"
 AUTH_KEYS="/root/.ssh/authorized_keys"
 RPM_REPO="/run/media/root/CentOS 7 x86_64/Packages"
@@ -192,6 +193,24 @@ fi
 
 rpm -ivh epel-release-latest-7.noarch.rpm 1> /dev/null 2>&1
 yum repolist 1> /dev/null 2>&1
+
+statusUpdate 'installing and configuring proxy'
+yum -y install squid
+cat<< EOF > ${PROXY}
+visible_hostname sp
+acl LAN src 192.168.225.0/24
+http_access allow LAN
+http_access deny all
+http_port 8080
+cache_dir ufs /var/spool/squid 4096 100 256
+cache_mem 512 MB
+EOF
+systemctl restart squid
+systemctl enable squid
+
+ssh cp01 "export http_proxy=http://sp:8080/ \
+&& export https_proxy=https://sp:8080/"
+
 
 statusUpdate 'installing' 'nfs on cp01'
 ssh cp01 "yum -y install nfs-utils.x86_64 \
