@@ -38,8 +38,8 @@ if [ -f ${HOST_NAME} ];then
 fi
 
 statusUpdate 'disabling' 'NetworkManager'
-systemctl stop NetworkManager.service
-systemctl disable NetworkManager.service
+systemctl stop NetworkManager.service 1> /dev/null 2>&1
+systemctl disable NetworkManager.service 1> /dev/null 2>&1
 
 statusUpdate 'disabling' 'SElinux'
 if [ -f ${SElinux} ];then
@@ -73,7 +73,7 @@ EOF
 fi
 
 statusUpdate 'restarting' 'network'
-systemctl restart network
+systemctl restart network 1> /dev/null 2>&1
 
 statusUpdate 'configuring' 'DNS'
 if [ -f ${DNS} ];then
@@ -87,8 +87,8 @@ EOF
 fi
 
 statusUpdate 'disabling' 'firewall'
-systemctl stop firewalld.service
-systemctl disable firewalld.service
+systemctl stop firewalld.service 1> /dev/null 2>&1
+systemctl disable firewalld.service 1> /dev/null 2>&1
 
 statusUpdate 'checking' 'ssh'
 if [ -d $HOME/.ssh ];then
@@ -146,8 +146,8 @@ else
 fi
 
 statusUpdate 'restarting' 'vsftpd'
-systemctl restart vsftpd
-systemctl enable vsftpd
+systemctl restart vsftpd 1> /dev/null 2>&1
+systemctl enable vsftpd 1> /dev/null 2>&1
 
 statusUpdate 'copying rpms repository to' 'ftp root'
 cp -r "${RPM_REPO}" ${FTP_ROOT}
@@ -155,7 +155,7 @@ cp -r "${RPM_REPO}" ${FTP_ROOT}
 statusUpdate 'creating' 'base repolist'
 createrepo=$(ls "${RPM_REPO}"|grep createrepo)
 rpm -ivh "${RPM_REPO}/${createrepo}"  1> /dev/null 2>&1
-createrepo ${FTP_ROOT}
+createrepo ${FTP_ROOT} 1> /dev/null 2>&1
 
 rm -rf /etc/yum.repos.d/*
 
@@ -181,7 +181,8 @@ ssh cp01 "rpm -ivh '${RPM_REPO}'/${ftp} && yum clean all"
 
 statusUpdate 'adding' 'epel repolist'
 #Add epel to yum
-yum -y install epel-release 1> /dev/null 2>&1
+wget --no-check-certificate https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+scp $HOME/epel-release-latest-7.noarch.rpm cp01:~
 
 sed -i 's/^sslverify=.*/sslverify=false/g' /etc/yum.conf
 
@@ -191,10 +192,11 @@ sslverify=false
 EOF
 fi
 
+rpm -ivh epel-release-latest-7.noarch.rpm 1> /dev/null 2>&1
 yum repolist 1> /dev/null 2>&1
 
 statusUpdate 'installing and configuring proxy'
-yum -y install squid
+yum -y install squid 1> /dev/null 2>&1
 cat<< EOF > ${PROXY}
 visible_hostname sp
 acl LAN src 192.168.225.0/24
@@ -236,12 +238,12 @@ EOF
 
 exportfs -a
 
-systemctl restart rpcbind
-systemctl enable rpcbind
+systemctl restart rpcbind 1> /dev/null 2>&1
+systemctl enable rpcbind 1> /dev/null 2>&1
 
 statusUpdate 'restarting' 'nfs'
-systemctl restart nfs
-systemctl enable nfs
+systemctl restart nfs 1> /dev/null 2>&1
+systemctl enable nfs 1> /dev/null 2>&1
 
 #ssh cp01 "mount sp:/glb/home /glb/home"
 #ssh cp02 "systemctl start rpcbind && systemctl enable nfs && mount sp:/glb/home /glb/home"
@@ -259,15 +261,15 @@ ssh cp01 "systemctl restart autofs && systemctl enable autofs"
 
 statusUpdate 'installing and configuraing' 'nis'
 yum -y install ypserv.x86_64 1> /dev/null 2>&1
-nisdomainname nisDC
+nisdomainname nisDC 1> /dev/null 2>&1
 cat <<EOF > ${NIS_DOMAIN}
 NISDOMAIN=nisDC
 EOF
 
-systemctl restart ypserv
-systemctl enable ypserv
-systemctl restart yppasswdd
-systemctl enable yppasswdd
+systemctl restart ypserv 1> /dev/null 2>&1
+systemctl enable ypserv 1> /dev/null 2>&1
+systemctl restart yppasswdd 1> /dev/null 2>&1
+systemctl enable yppasswdd 1> /dev/null 2>&1
 
 statusUpdate 'making it' 'master or domain controller'
 echo -e "y\n"|/usr/lib64/yp/ypinit -m 1> /dev/null 2>&1
@@ -309,4 +311,5 @@ EOF
 fi
 fi
 
-ssh cp01 "yum -y install epel-release 1> /dev/null 2>&1"
+ssh cp01 "rpm -ivh $HOME/epel-release-latest-7.noarch.rpm 1> /dev/null 2>&1"
+
