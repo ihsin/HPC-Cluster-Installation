@@ -28,7 +28,7 @@ HOST_ONLY_CON="/etc/sysconfig/network-scripts/ifcfg-ens33"
 DNS="/etc/hosts"
 AUTH_KEYS="/root/.ssh/authorized_keys"
 SSH_CONFIG="/root/.ssh/config"
-
+PROXY="/etc/profile.d/proxy.sh"
 
 statusUpdate 'changing' 'hostname'
 if [ -f ${HOST_NAME} ]; then
@@ -103,5 +103,9 @@ Host *
         StrictHostKeyChecking no
 EOF
 
-#ping -c 1 sp
+cat <<EOF > ${PROXY}
+export http_proxy=http://sp:8080/
+export https_proxy=https://sp:8080/
+EOF
 
+#ping -c 1 sp

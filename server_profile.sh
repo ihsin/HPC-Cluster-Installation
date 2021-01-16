@@ -208,10 +208,6 @@ EOF
 systemctl restart squid
 systemctl enable squid
 
-ssh cp01 "export http_proxy=http://sp:8080/ \
-&& export https_proxy=https://sp:8080/"
-
-
 statusUpdate 'installing' 'nfs on cp01'
 ssh cp01 "yum -y install nfs-utils.x86_64 \
 && systemctl restart rpcbind \
