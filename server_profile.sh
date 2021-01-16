@@ -181,8 +181,7 @@ ssh cp01 "rpm -ivh '${RPM_REPO}'/${ftp} && yum clean all"
 
 statusUpdate 'adding' 'epel repolist'
 #Add epel to yum
-wget --no-check-certificate https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-scp $HOME/epel-release-latest-7.noarch.rpm cp01:~
+yum -y install epel-release 1> /dev/null 2>&1
 
 sed -i 's/^sslverify=.*/sslverify=false/g' /etc/yum.conf
 
@@ -192,8 +191,6 @@ sslverify=false
 EOF
 fi
 
-rpm -ivh epel-release-latest-7.noarch.rpm 1> /dev/null 2>&1
-ssh cp01 "rpm -ivh $HOME/epel-release-latest-7.noarch.rpm 1> /dev/null 2>&1"
 yum repolist 1> /dev/null 2>&1
 
 statusUpdate 'installing and configuring proxy'
@@ -311,3 +308,5 @@ LSF_QUIET_INST="Y"
 EOF
 fi
 fi
+
+ssh cp01 "yum -y install epel-release 1> /dev/null 2>&1"
