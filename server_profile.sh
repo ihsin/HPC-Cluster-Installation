@@ -279,37 +279,42 @@ ssh cp01 "yum -y install ypbind.x86_64 \
 && systemctl restart ypbind \
 && systemctl enable ypbind"
 
-statusUpdate 'adding user and invoking' 'make'
 make -C /var/yp/ 1> /dev/null 2>&1
-
-
-read -p "Install LSF? (y/N)? " choice
-case "$choice" in 
-y|Y ) lsf=1;;
-* ) echo "WARN: Skipping Nagios Installation";;
-esac
-
-if [ ! -z $lsf ];then
-if [ ! -f "$HOME/lsf10.1_no_jre_lsfinstall.tar.Z" ]; then
-echo -e "Error: LSF bundle missing in root directory\n"
-else
-useradd -d /glb/home/lsfadmin lsfadmin
-make -C /var/yp/ 1> /dev/null 2>&1
-yum -y install java-1.8.0-openjdk.x86_64
-tar -xzf $HOME/lsf10.1_no_jre_lsfinstall.tar.Z
-mv $HOME/lsf10.1_lsfinstall/install.config $HOME/lsf10.1_lsfinstall/install.config.sample
-cat <<EOF > $HOME/lsf10.1_lsfinstall/install.config
-LSF_TOP="/glb/apps/lsf"
-LSF_ADMINS="lsfadmin"
-LSF_CLUSTER_NAME="VMWare_Cluster"
-LSF_MASTER_LIST="sp"
-LSF_ENTITLEMENT_FILE="$HOME/lsf_std_entitlement_10.1.dat"
-LSF_ADD_SERVERS=“cp01"
-LSF_ADD_CLIENTS=“cp01“
-LSF_QUIET_INST="Y"
-EOF
-fi
-fi
 
 ssh cp01 "rpm -ivh $HOME/epel-release-latest-7.noarch.rpm 1> /dev/null 2>&1"
+
+read -p "Install slurm? (y/N)? " choice
+case "$choice" in
+y|Y ) slurm=1;;
+* ) echo "WARN: Skipping Slurm Installation";;
+esac
+
+statusUpdate 'adding' 'functional Users'
+useradd -d /glb/home/munge munge
+useradd -d /glb/home/slurm slurm
+make -C /var/yp/ 1> /dev/null 2>&1
+
+
+if [ ! -z $slurm ];then
+statusUpdate 'Installing' 'munge'
+yum -y install munge 1> /dev/null 2>&1
+ssh cp01 "bash -c 'yum -y install munge'" 1>/dev/null 2>&1
+if [ ! -f "$HOME/slurm-20.11.2.tar.bz2" ]; then
+echo -e "Warn: Slurm source file missing in root directory\n"
+echo -e "Downloading it\n"
+wget --no-check-certificate  https://download.schedmd.com/slurm/slurm-20.11.2.tar.bz2 1> /dev/null 2>&1
+fi
+statusUpdate 'Creating and copying' 'munge random key'
+/usr/sbin/create-munge-key 1> /dev/null 2>&1
+scp ${MUNGE_KEY} cp01:${MUNGE_KEY}
+statusUpdate 'Changing' 'Ownership and Permissions'
+chown -R munge: /etc/munge/ /var/log/munge/ /var/lib/munge/ /run/munge/
+ssh cp01 "chown -R munge: /etc/munge/ /var/log/munge/ /var/lib/munge/ /run/munge/"
+systemctl start munge
+systemctl enable munge
+ssh cp01 "systemctl start munge && systemctl enable munge"
+else
+echo -e "Warn:Skipping slurm installation\n"
+fi
+
 
