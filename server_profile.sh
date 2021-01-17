@@ -31,6 +31,7 @@ SSH_CONFIG="/root/.ssh/config"
 AUTH_KEYS="/root/.ssh/authorized_keys"
 RPM_REPO="/run/media/root/CentOS 7 x86_64/Packages"
 FTP_ROOT="/var/ftp/pub/"
+MUNGE_KEY="/etc/munge/munge.key"
 
 statusUpdate 'changing' 'hostname'
 if [ -f ${HOST_NAME} ];then
@@ -313,8 +314,12 @@ ssh cp01 "chown -R munge: /etc/munge/ /var/log/munge/ /var/lib/munge/ /run/munge
 systemctl start munge
 systemctl enable munge
 ssh cp01 "systemctl start munge && systemctl enable munge"
-else
-echo -e "Warn:Skipping slurm installation\n"
+statusUpdate "installing" "gcc"
+yum -y install gcc 1> /dev/null 2>&1
+ssh cp01 "yum -y install gcc" 1> /dev/null 2>&1
+statusUpdate "installing" "slurm: THIS WILL TAKE FEW MINUTES"
+tar -xjf $HOME/slurm-20.11.2.tar.bz2
+cd $HOME/slurm-20.11.2 && ./configure --prefix=/glb/apps/slurm && make && make install
 fi
 
 
