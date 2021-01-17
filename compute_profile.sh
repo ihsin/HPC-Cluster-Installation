@@ -109,3 +109,11 @@ export https_proxy=https://sp:8080/
 EOF
 
 #ping -c 1 sp
+sed -i 's/^sslverify=.*/sslverify=false/g' /etc/yum.conf
+
+if [ -z $(cat /etc/yum.conf |egrep ^sslverify) ];then
+cat <<EOF >> /etc/yum.conf
+sslverify=false
+EOF
+fi
+
