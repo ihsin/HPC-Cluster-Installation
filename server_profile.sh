@@ -301,10 +301,11 @@ statusUpdate 'Installing' 'munge'
 yum -y install munge 1> /dev/null 2>&1
 ssh cp01 "bash -c 'yum -y install munge'" 1>/dev/null 2>&1
 if [ ! -f "$HOME/slurm-20.11.2.tar.bz2" ]; then
-echo -e "Warn: Slurm source file missing in root directory\n"
-echo -e "Downloading it\n"
+echo -e "Warn: Slurm source file missing in root directory"
+echo -e "Downloading it"
 wget --no-check-certificate  https://download.schedmd.com/slurm/slurm-20.11.2.tar.bz2 1> /dev/null 2>&1
 fi
+
 statusUpdate 'Creating and copying' 'munge random key'
 /usr/sbin/create-munge-key 1> /dev/null 2>&1
 scp ${MUNGE_KEY} cp01:${MUNGE_KEY}
@@ -314,12 +315,26 @@ ssh cp01 "chown -R munge: /etc/munge/ /var/log/munge/ /var/lib/munge/ /run/munge
 systemctl start munge
 systemctl enable munge
 ssh cp01 "systemctl start munge && systemctl enable munge"
-statusUpdate "installing" "gcc"
-yum -y install gcc 1> /dev/null 2>&1
-ssh cp01 "yum -y install gcc" 1> /dev/null 2>&1
+
+statusUpdate "installing" "python dependencies"
+yum install gcc openssl-devel bzip2-devel libffi-devel -y 1> /dev/null 2>&1
+ssh cp01 "yum install gcc openssl-devel bzip2-devel libffi-devel -y" 1> /dev/null 2>&1
+
+statusUpdate "installing" "python3"
+if [ ! -f "$HOME/Python-3.8.1.tgz" ]; then
+echo -e "Warn: python source file missing in root directory"
+echo -e "Downloading it"
+curl -k  -O https://www.python.org/ftp/python/3.8.1/Python-3.8.1.tgz 1> /dev/null 2>&1
+tar -xzf $HOME/Python-3.8.1.tgz
+cd $HOME/Python-3.8.1/
+./configure --enable-optimizations --prefix=/glb/apps/python3 && make altinstall
+
 statusUpdate "installing" "slurm: THIS WILL TAKE FEW MINUTES"
+ln -s /glb/apps/python3/bin/python3.8 /glb/apps/python3/bin/python3
+export PATH=$PATH:/glb/apps/python3/bin/
 tar -xjf $HOME/slurm-20.11.2.tar.bz2
-cd $HOME/slurm-20.11.2 && ./configure --prefix=/glb/apps/slurm && make && make install
+cd $HOME/slurm-20.11.2
+./configure --prefix=/glb/apps/slurm && make && make install
 fi
 
 
