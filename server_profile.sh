@@ -304,6 +304,7 @@ if [ ! -f "$HOME/slurm-20.11.2.tar.bz2" ]; then
 echo -e "Warn: Slurm source file missing in root directory"
 echo -e "Downloading it"
 wget --no-check-certificate  https://download.schedmd.com/slurm/slurm-20.11.2.tar.bz2 1> /dev/null 2>&1
+tar -xjf $HOME/slurm-20.11.2.tar.bz2
 fi
 
 statusUpdate 'Creating and copying' 'munge random key'
@@ -326,14 +327,14 @@ echo -e "Warn: python source file missing in root directory"
 echo -e "Downloading it"
 curl -k  -O https://www.python.org/ftp/python/3.8.1/Python-3.8.1.tgz 1> /dev/null 2>&1
 tar -xzf $HOME/Python-3.8.1.tgz
+fi
 cd $HOME/Python-3.8.1/
 ./configure --enable-optimizations --prefix=/glb/apps/python3 && make altinstall
 
 statusUpdate "installing" "slurm: THIS WILL TAKE FEW MINUTES"
 ln -s /glb/apps/python3/bin/python3.8 /glb/apps/python3/bin/python3
 export PATH=$PATH:/glb/apps/python3/bin/
-tar -xjf $HOME/slurm-20.11.2.tar.bz2
-cd $HOME/slurm-20.11.2
+cd $HOME/slurm-20.11.2/
 ./configure --prefix=/glb/apps/slurm && make && make install
 fi
 
