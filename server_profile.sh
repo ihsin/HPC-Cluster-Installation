@@ -10,6 +10,12 @@ as a compute node.
 EOF
 )
 
+#Check if script is running with root permissions
+if [[ $UID != "0" ]]; then
+  echo "Sorry, must be root to run this."
+  exit
+fi
+
 if [ $# -gt 0 ];then
 echo $USAGE
 exit 0
@@ -325,7 +331,8 @@ statusUpdate "installing" "python3"
 if [ ! -f "$HOME/Python-3.8.1.tgz" ]; then
 echo -e "Warn: python source file missing in root directory"
 echo -e "Downloading it"
-curl -k  -O https://www.python.org/ftp/python/3.8.1/Python-3.8.1.tgz 1> /dev/null 2>&1
+wget --no-check-certificate https://www.python.org/ftp/python/3.8.1/Python-3.8.1.tgz 1> /dev/null 2>&1
+[[ $? -ne 0 ]] && exit
 tar -xzf $HOME/Python-3.8.1.tgz
 fi
 cd $HOME/Python-3.8.1/

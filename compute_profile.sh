@@ -12,6 +12,12 @@ as a master node.
 EOF
 )
 
+#Check if script is running with root permissions
+if [[ $UID != "0" ]]; then
+  echo "Sorry, must be root to run this."
+  exit
+fi
+
 if [ $# -gt 0 ];then
 echo $USAGE
 exit 0
