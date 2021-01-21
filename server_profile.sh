@@ -331,11 +331,12 @@ statusUpdate "installing" "python3"
 if [ ! -f "$HOME/Python-3.8.1.tgz" ]; then
 echo -e "Warn: python source file missing in root directory"
 echo -e "Downloading it"
-wget --no-check-certificate https://www.python.org/ftp/python/3.8.1/Python-3.8.1.tgz 1> /dev/null 2>&1
+wget --no-check-certificate https://www.python.org/ftp/python/3.0.1/Python-3.0.1.tar.bz2 1> /dev/null 2>&1
 [[ $? -ne 0 ]] && exit
-tar -xzf $HOME/Python-3.8.1.tgz
+tar -xjf $HOME/Python-3.0.1.tar.bz2
+[[ $? -ne 0 ]] && exit
 fi
-cd $HOME/Python-3.8.1/
+cd $HOME/Python-3.0.1/
 ./configure --enable-optimizations --prefix=/glb/apps/python3 && make altinstall
 
 statusUpdate "installing" "slurm: THIS WILL TAKE FEW MINUTES"
