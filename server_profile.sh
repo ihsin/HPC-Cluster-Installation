@@ -340,7 +340,7 @@ cd $HOME/Python-3.0.1/
 ./configure --enable-optimizations --prefix=/glb/apps/python3 && make altinstall
 
 statusUpdate "installing" "slurm: THIS WILL TAKE FEW MINUTES"
-ln -s /glb/apps/python3/bin/python3.8 /glb/apps/python3/bin/python3
+ln -s /glb/apps/python3/bin/python3.0 /glb/apps/python3/bin/python3
 export PATH=$PATH:/glb/apps/python3/bin/
 cd $HOME/slurm-20.11.2/
 ./configure --prefix=/glb/apps/slurm && make && make install
