@@ -344,6 +344,29 @@ ln -s /glb/apps/python3/bin/python3.0 /glb/apps/python3/bin/python3
 export PATH=$PATH:/glb/apps/python3/bin/
 cd $HOME/slurm-20.11.2/
 ./configure --prefix=/glb/apps/slurm && make && make install
+
+statusUpdate "configuring and setting" "permissions on sp"
+mkdir -p /glb/apps/slurm/etc/
+cp $HOME/slurm-20.11.2/etc/slurm.conf.example /glb/apps/slurm/etc/slurm.conf
+mkdir /var/spool/slurmctld
+chown slurm:  /var/spool/slurmctld
+chmod 755 /var/spool/slurmctld
+mkdir  /var/log/slurm
+touch /var/log/slurm/slurmctld.log
+touch /var/log/slurm/slurm_jobacct.log /var/log/slurm/slurm_jobcomp.log
+chown -R slurm:  /var/log/slurm/
+cp -p $HOME/slurm-20.11.2/etc/slurmctld.service /etc/systemd/system/
+chmod +x /etc/systemd/system/slurmctld.service
+systemctl enable slurmctld.service
+systemctl start slurmctld.service
+scp etc/slurmd.service cp01:~/
+cat <<EOF > /etc/profile.d/slurm.sh
+# /etc/profile.d/slurm.sh
+# This script prepares the slurm application environment by setting the PATH.
+export PATH=/glb/apps/slurm/bin:/glb/apps/slurm/sbin:$PATH
+export LD_LIBRARY_PATH=/glb/apps/slurm/lib:$LD_LIBRARY_PATH
+EOF
 fi
 
+statusUpdate "configuring and setting" "permissions on cp01"
 
