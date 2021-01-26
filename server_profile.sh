@@ -38,6 +38,7 @@ AUTH_KEYS="/root/.ssh/authorized_keys"
 RPM_REPO="/run/media/root/CentOS 7 x86_64/Packages"
 FTP_ROOT="/var/ftp/pub/"
 MUNGE_KEY="/etc/munge/munge.key"
+SLURM_INIT="/etc/profile.d/slurm.sh"
 
 statusUpdate 'changing' 'hostname'
 if [ -f ${HOST_NAME} ];then
@@ -348,6 +349,7 @@ cd $HOME/slurm-20.11.2/
 statusUpdate "configuring and setting" "permissions on sp"
 mkdir -p /glb/apps/slurm/etc/
 cp $HOME/slurm-20.11.2/etc/slurm.conf.example /glb/apps/slurm/etc/slurm.conf
+chown slurm: /glb/apps/slurm/etc/slurm.conf
 mkdir /var/spool/slurmctld
 chown slurm:  /var/spool/slurmctld
 chmod 755 /var/spool/slurmctld
@@ -360,13 +362,26 @@ chmod +x /etc/systemd/system/slurmctld.service
 systemctl enable slurmctld.service
 systemctl start slurmctld.service
 scp etc/slurmd.service cp01:~/
-cat <<EOF > /etc/profile.d/slurm.sh
+
+cat <<EOF > ${SLURM_INIT}
 # /etc/profile.d/slurm.sh
 # This script prepares the slurm application environment by setting the PATH.
 export PATH=/glb/apps/slurm/bin:/glb/apps/slurm/sbin:$PATH
 export LD_LIBRARY_PATH=/glb/apps/slurm/lib:$LD_LIBRARY_PATH
 EOF
-fi
 
 statusUpdate "configuring and setting" "permissions on cp01"
+scp $HOME/slurm-20.11.2/etc/slurmd.service cp01:/etc/systemd/system/
+
+ssh cp01 "mkdir /var/spool/slurmd \
+&& chown slurm: /var/spool/slurmd \
+&& chmod 755 /var/spool/slurmd \
+&& mkdir /var/log/slurm \
+&& touch /var/log/slurm/slurmd.log \
+&& chown -R slurm: /var/log/slurm/slurmd.log \
+&& chmod 744 /etc/systemd/system/slurmd.service \
+&& systemctl enable slurmd.service \
+&& systemctl start slurmd.service"
+fi
+
 
