@@ -54,7 +54,7 @@ if [ -f ${SElinux} ];then
         echo "SELINUX=disabled">${SElinux}
 fi
 
-statusUpdate 'configuring' 'Host-Only adapter'
+statusUpdate 'configuring' 'NAT adapter'
 if [ -f ${NAT_CON} ];then
 cat <<EOF > ${NAT_CON}
 TYPE=Ethernet
@@ -66,7 +66,7 @@ ONBOOT=yes
 EOF
 fi
 
-statusUpdate 'configuring' 'NAT adapter'
+statusUpdate 'configuring' 'Host-Only adapter'
 if [ -f ${HOST_ONLY_CON} ];then
 cat <<EOF > ${HOST_ONLY_CON}
 TYPE=Ethernet
