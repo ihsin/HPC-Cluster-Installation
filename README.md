@@ -29,7 +29,7 @@ Q. What the scripts does?
 1. Provides a static IP address to Host Only adapters as follows:
 	1. master node: 192.168.225.100
 	2. compute node: 192.168.225.101
-2. Configures DNS 
+2. Configures local DNS 
 3. Disables Firewalld and SELinux
 4. Creates a passwordless ssh access for root from both ends.
 5. Configures ftp
