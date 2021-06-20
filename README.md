@@ -1,6 +1,6 @@
-##### HPC-Cluster-Installation #####
+<h3 style="text-align:center">HPC-Cluster-Installation</h3>
 
-A project to automate HPC environment configurations with slurm as schedular on GNOME Desktop installation of CentOS 7 using VMware.
+<h3>A project to automate HPC environment configurations with slurm as schedular on GNOME Desktop installation of CentOS 7 using VMware.</h3>
 
 Requirequirements:
 1. VMware
