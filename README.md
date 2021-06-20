@@ -1,12 +1,8 @@
-<h3 style="text-align:center">HPC-Cluster-Installation</h3>
-
 <h3>A project to automate HPC environment configurations with slurm as schedular on GNOME Desktop installation of CentOS 7 using VMware.</h3>
 
 Requirequirements:
-1. VMware
-2. CentOS 7 iso
-
-Note:  The CentOS 7 iso should not be a minimal source.
+1. VMware (<a href="https://www.vmware.com/in/products/workstation-pro/workstation-pro-evaluation.html">Refererence</a>)
+2. CentOS 7 iso (<a href="http://centos.mirrors.estointernet.in/7.9.2009/isos/x86_64/CentOS-7-x86_64-DVD-2009.iso">Download Link</a>)
 
 Step 1. Creating the compute node.
 1. Using the iso image create a VM with Network Adapter as Host Only.
@@ -15,8 +11,8 @@ Step 1. Creating the compute node.
 Step 2. Run compute_profile.sh on compute node as root.
 
 Step 3. Creating the master node.
-1. Using the iso image create a VM with Network Adapters as follows:
-a. Host Only
+1. Using the iso image create a VM with Network Adapters as follows:<br>
+a. Host Only<br>
 b. NAT
 2. Install CentOS-7 with GNOME Desktop configurations.
 
