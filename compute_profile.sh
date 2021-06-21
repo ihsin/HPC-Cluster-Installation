@@ -23,6 +23,29 @@ echo $USAGE
 exit 0
 fi
 
+#Check if OS is not a minimal installation
+#
+if [ "$(grep minimal /root/anaconda-ks.cfg)" != "" ];then
+	printf "Detected Minimal installation! Exiting"
+	exit 3
+fi
+
+#Check if it is running on  CentOS 7 
+#
+OSVER=$(awk -F "=" '{print $2}' /etc/os-release|head -n 2|sed 's/\"//g'|tr "\n" " ")
+arr=($OSVER)
+[ "${arr[0]}" != "CentOS" ] || [ "${arr[2]}" != "7" ] && echo "OS is not CentOS7! Exiting" && exit 4
+
+# Check if this tool is run in a virtualized environment
+#
+if [ $(command dmesg &> /dev/null; echo $?) -eq 0 ]; then
+    env=$(dmesg | awk '/paravirtualized/{print $7}')
+   if [ ! -z "$env" ] && [ "$env" == 'bare' ]; then
+     printf "Detected Non-virualized OS! Exiting\n"
+     exit 2
+   fi
+fi
+
 function statusUpdate() {
  echo -e "${1}"" ""${2}..."
 }
