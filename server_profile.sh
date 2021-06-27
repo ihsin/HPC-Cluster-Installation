@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 
 USAGE=$(cat <<-EOF
 ${0} sets up the master or admin node
