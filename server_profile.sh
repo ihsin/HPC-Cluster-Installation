@@ -1,5 +1,5 @@
 #!/bin/sh
-set -e
+#set -e
 
 USAGE=$(cat <<-EOF
 ${0} sets up the master or admin node
@@ -165,19 +165,7 @@ else
 echo "\n Error connecting to cp01 \n"
 fi
 
-statusUpdate 'pinging' 'cp02'
-ping -c 1 cp02  1> /dev/null 2>&1
-
-if [ $? -eq 0 ]; then
-cat ~/.ssh/id_rsa.pub | ssh cp02 "chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
-ssh-add  1> /dev/null 2>&1
-ssh cp02 cat /root/.ssh/id_rsa.pub>>${AUTH_KEYS}
-else
-echo "\n Error connecting to cp02 \n"
-fi
-
 scp ~/.ssh/authorized_keys cp01:/root/.ssh  1> /dev/null 2>&1
-#scp ~/.ssh/authorized_keys cp02:/root/.ssh
 
 statusUpdate 'Installing' 'vsftpd'
 if [ -d "${RPM_REPO}" ];then
@@ -238,7 +226,7 @@ rpm -ivh epel-release-latest-7.noarch.rpm 1> /dev/null 2>&1
 yum repolist 1> /dev/null 2>&1
 
 statusUpdate 'installing and configuring proxy'
-yum -y install squid 1> /dev/null 2>&1
+yum -y -q install squid 1> /dev/null 2>&1
 cat<< EOF > ${PROXY}
 visible_hostname sp
 acl LAN src 192.168.225.0/24
@@ -252,7 +240,7 @@ systemctl restart squid
 systemctl enable squid
 
 statusUpdate 'installing' 'nfs on cp01'
-ssh cp01 "yum -y install nfs-utils.x86_64 \
+ssh cp01 "yum -y -q install nfs-utils.x86_64 \
 && systemctl restart rpcbind \
 && systemctl enable rpcbind \
 && systemctl restart nfs \
@@ -265,7 +253,7 @@ fi \
 && mkdir /glb"
 
 statusUpdate 'installing' 'nfs'
-yum -y install nfs-utils.x86_64 1> /dev/null 2>&1
+yum -y -q install nfs-utils.x86_64 1> /dev/null 2>&1
 if [ -d /glb ];then
 rm -rf /glb
 fi
@@ -291,7 +279,7 @@ systemctl enable nfs 1> /dev/null 2>&1
 #ssh cp02 "systemctl start rpcbind && systemctl enable nfs && mount sp:/glb/home /glb/home"
 
 statusUpdate 'installing autofs and mounting' '/glb/home & /glb/apps on cp01'
-ssh cp01 "yum install -y autofs.x86_64 \
+ssh cp01 "yum install -y -q autofs.x86_64 \
 && sed -i 's/\/misc/\/glb/' /etc/auto.master \
 && sed -i 's/auto.misc/auto.home/' /etc/auto.master \
 && cat <<EOF > /etc/auto.home
@@ -302,7 +290,7 @@ EOF"
 ssh cp01 "systemctl restart autofs && systemctl enable autofs"
 
 statusUpdate 'installing and configuraing' 'nis'
-yum -y install ypserv.x86_64 1> /dev/null 2>&1
+yum -y -q install ypserv.x86_64 1> /dev/null 2>&1
 nisdomainname nisDC 1> /dev/null 2>&1
 cat <<EOF > ${NIS_DOMAIN}
 NISDOMAIN=nisDC
@@ -316,7 +304,7 @@ systemctl enable yppasswdd 1> /dev/null 2>&1
 statusUpdate 'making it' 'master or domain controller'
 echo -e "y\n"|/usr/lib64/yp/ypinit -m 1> /dev/null 2>&1
 
-ssh cp01 "yum -y install ypbind.x86_64 \
+ssh cp01 "yum -y -q install ypbind.x86_64 \
 && authconfig --enablenis --nisdomain=nisDC --nisserver=sp --update \
 && systemctl restart ypbind \
 && systemctl enable ypbind"
@@ -339,8 +327,8 @@ make -C /var/yp/ 1> /dev/null 2>&1
 
 if [ ! -z $slurm ];then
 statusUpdate 'Installing' 'munge'
-yum -y install munge 1> /dev/null 2>&1
-ssh cp01 "bash -c 'yum -y install munge'" 1>/dev/null 2>&1
+yum -y -q install munge 1> /dev/null 2>&1
+ssh cp01 "bash -c 'yum -y -q install munge'" 1>/dev/null 2>&1
 if [ ! -f "$HOME/slurm-20.11.2.tar.bz2" ]; then
 echo -e "Warn: Slurm source file missing in root directory"
 echo -e "Downloading it"
@@ -359,8 +347,8 @@ systemctl enable munge
 ssh cp01 "systemctl start munge && systemctl enable munge"
 
 statusUpdate "installing" "python dependencies"
-yum install gcc openssl-devel bzip2-devel libffi-devel -y 1> /dev/null 2>&1
-ssh cp01 "yum install gcc openssl-devel bzip2-devel libffi-devel -y" 1> /dev/null 2>&1
+yum install gcc openssl-devel bzip2-devel libffi-devel -y -q 1> /dev/null 2>&1
+ssh cp01 "yum install gcc openssl-devel bzip2-devel libffi-devel -y -q" 1> /dev/null 2>&1
 
 statusUpdate "installing" "python3"
 if [ ! -f "$HOME/Python-3.8.1.tgz" ]; then
