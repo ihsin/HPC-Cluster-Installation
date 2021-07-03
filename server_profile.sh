@@ -47,11 +47,20 @@ if [ $(command dmesg &> /dev/null; echo $?) -eq 0 ]; then
 
 fi
 
+# Check if the disk image is mounted to copy the RPMS.
+#
+isMounted=$(df -Th|grep -E 'iso9660.*CentOS')
+if [ -z "$isMounted" ];then
+	printf "Could not find mounted CentOS image disk! Exiting\n"
+	exit
+fi
+
 function statusUpdate() {
  echo -e "${1}"" ""${2}..."
 }
 
 
+RPM_REPO="$(echo $isMounted|awk '{print $(NF-2)" "$(NF-1)" "$NF}')""/Packages"
 SElinux="/etc/sysconfig/selinux"
 HOST_NAME="/etc/hostname"
 NIS_DOMAIN="/etc/sysconfig/network"
@@ -61,7 +70,6 @@ DNS="/etc/hosts"
 PROXY="/etc/squid/squid.conf"
 SSH_CONFIG="/root/.ssh/config"
 AUTH_KEYS="/root/.ssh/authorized_keys"
-RPM_REPO="/run/media/root/CentOS 7 x86_64/Packages"
 FTP_ROOT="/var/ftp/pub/"
 MUNGE_KEY="/etc/munge/munge.key"
 SLURM_INIT="/etc/profile.d/slurm.sh"
