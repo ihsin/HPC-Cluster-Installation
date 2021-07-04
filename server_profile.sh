@@ -211,7 +211,7 @@ ssh cp01 "rpm -ivh '${RPM_REPO}'/${ftp} && yum clean all"
 
 statusUpdate 'adding' 'epel repolist'
 #Add epel to yum
-wget --no-check-certificate https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+wget --no-check-certificate -q https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
 scp $HOME/epel-release-latest-7.noarch.rpm cp01:~
 
 sed -i 's/^sslverify=.*/sslverify=false/g' /etc/yum.conf
