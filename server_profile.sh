@@ -2,14 +2,56 @@
 #set -e
 
 USAGE=$(cat <<-EOF
-${0} sets up the master or admin node
+$(basename $BASH_SOURCE) sets up the master or admin node
 for the HPC cluster.
 NOTE: Before running this script make 
 sure you run the compute node script 
 on the VM which you want to configure
 as a compute node.
+
+$(basename $BASH_SOURCE) <num>:
+num can be:
+1 -> configures network
+2 -> 1 + configures local DNS
+3 -> 2 + Disables Firewall and SElinux
+4 -> 3 + Passwordless ssh for root
+5 -> 4 + ftp configuration
+6 -> 5 + yum configuration
+7 -> 6 + epel
+8 -> 7 + squid proxy
+9 -> 8 + nfs & automount
+10 -> 9 + nis
+If no num provided then configures everything  
 EOF
 )
+
+case "$1" in
+        '1' ) echo "1";
+                exit 0;;
+        '2' ) echo "2";
+                exit 0;;
+        '3' ) echo "3";
+                exit 3;;
+        '4' ) echo "4";
+                exit 4;;
+        '5' ) echo "5";
+                exit 5;;
+        '6' ) echo "6";
+                exit 6;;
+        '7' ) echo "7";
+                exit 7;;
+        '8' ) echo "8";
+                exit 8;;
+        '9' ) echo "9";
+                exit 9;;
+        '10') echo "10";
+                exit 10;;
+         * ) echo "wrong option: ""$1";
+                echo $USAGE;
+                exit 3;;
+esac
+
+
 
 #Check if script is running with root permissions
 if [[ $UID != "0" ]]; then
@@ -17,7 +59,7 @@ if [[ $UID != "0" ]]; then
   exit
 fi
 
-if [ $# -gt 0 ];then
+if [ $# -gt 1 ];then
 echo $USAGE
 exit 0
 fi
