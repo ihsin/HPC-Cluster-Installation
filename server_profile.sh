@@ -1,14 +1,13 @@
 #!/bin/sh
 #set -e
 
-USAGE=$(cat <<-EOF
+USAGE=$(cat <<EOF
 $(basename $BASH_SOURCE) sets up the master or admin node
 for the HPC cluster.
 NOTE: Before running this script make 
 sure you run the compute node script 
 on the VM which you want to configure
 as a compute node.
-
 $(basename $BASH_SOURCE) <num>:
 num can be:
 1 -> configures network
@@ -25,33 +24,6 @@ If no num provided then configures everything
 EOF
 )
 
-case "$1" in
-        '1' ) echo "1";
-                exit 0;;
-        '2' ) echo "2";
-                exit 0;;
-        '3' ) echo "3";
-                exit 3;;
-        '4' ) echo "4";
-                exit 4;;
-        '5' ) echo "5";
-                exit 5;;
-        '6' ) echo "6";
-                exit 6;;
-        '7' ) echo "7";
-                exit 7;;
-        '8' ) echo "8";
-                exit 8;;
-        '9' ) echo "9";
-                exit 9;;
-        '10') echo "10";
-                exit 10;;
-         * ) echo "wrong option: ""$1";
-                echo $USAGE;
-                exit 3;;
-esac
-
-
 
 #Check if script is running with root permissions
 if [[ $UID != "0" ]]; then
@@ -64,18 +36,21 @@ echo $USAGE
 exit 0
 fi
 
+
 #Check if OS is not a minimal installation
 #
 if [ "$(grep minimal /root/anaconda-ks.cfg)" != "" ];then
-	printf "Detected Minimal installation! Exiting"
-	exit 3
+        printf "Detected Minimal installation! Exiting"
+        exit 3
 fi
+
 
 #Check if it is running on  CentOS 7 
 #
 OSVER=$(awk -F "=" '{print $2}' /etc/os-release|head -n 2|sed 's/\"//g'|tr "\n" " ")
 arr=($OSVER)
 [ "${arr[0]}" != "CentOS" ] || [ "${arr[2]}" != "7" ] && echo "OS is not CentOS7! Exiting" && exit 4
+
 
 # Check if this tool is run in a virtualized environment
 #
@@ -89,13 +64,15 @@ if [ $(command dmesg &> /dev/null; echo $?) -eq 0 ]; then
 
 fi
 
+
 # Check if the disk image is mounted to copy the RPMS.
 #
 isMounted=$(df -Th|grep -E 'iso9660.*CentOS')
 if [ -z "$isMounted" ];then
-	printf "Could not find mounted CentOS image disk! Exiting\n"
-	exit
+        printf "Could not find mounted CentOS image disk! Exiting\n"
+        exit
 fi
+
 
 function statusUpdate() {
  echo -e "${1}"" ""${2}..."
@@ -116,22 +93,21 @@ FTP_ROOT="/var/ftp/pub/"
 MUNGE_KEY="/etc/munge/munge.key"
 SLURM_INIT="/etc/profile.d/slurm.sh"
 
+
+
 statusUpdate 'changing' 'hostname'
 if [ -f ${HOST_NAME} ];then
-	echo "sp">${HOST_NAME}
+        echo "sp">${HOST_NAME}
 fi
 
 statusUpdate 'disabling' 'NetworkManager'
 systemctl stop NetworkManager.service 1> /dev/null 2>&1
 systemctl disable NetworkManager.service 1> /dev/null 2>&1
 
-statusUpdate 'disabling' 'SElinux'
-if [ -f ${SElinux} ];then
-        echo "SELINUX=disabled">${SElinux}
-fi
 
-statusUpdate 'configuring' 'NAT adapter'
-if [ -f ${NAT_CON} ];then
+function configureNetwork(){
+ statusUpdate 'configuring' 'NAT adapter'
+ if [ -f ${NAT_CON} ];then
 cat <<EOF > ${NAT_CON}
 TYPE=Ethernet
 BOOTPROTO=dhcp
@@ -140,10 +116,10 @@ NAME=ens34
 DEVICE=ens34
 ONBOOT=yes
 EOF
-fi
+ fi
 
-statusUpdate 'configuring' 'Host-Only adapter'
-if [ -f ${HOST_ONLY_CON} ];then
+ statusUpdate 'configuring' 'Host-Only adapter'
+ if [ -f ${HOST_ONLY_CON} ];then
 cat <<EOF > ${HOST_ONLY_CON}
 TYPE=Ethernet
 BOOTPROTO=none
@@ -154,13 +130,16 @@ ONBOOT=yes
 IPADDR=192.168.225.100
 PREFIX=24
 EOF
-fi
+ fi
 
-statusUpdate 'restarting' 'network'
-systemctl restart network 1> /dev/null 2>&1
+ statusUpdate 'restarting' 'network'
+ systemctl restart network 1> /dev/null 2>&1
+}
 
-statusUpdate 'configuring' 'DNS'
-if [ -f ${DNS} ];then
+
+function configureDNS(){
+ statusUpdate 'configuring' 'DNS'
+ if [ -f ${DNS} ];then
 cat <<EOF > $DNS
 127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
 ::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
@@ -168,12 +147,23 @@ cat <<EOF > $DNS
 192.168.225.101 cp01 compute1 
 192.168.225.102 cp02 compute2
 EOF
+ fi
+}
+
+
+function disableNMandSElinux(){
+statusUpdate 'disabling' 'SElinux'
+if [ -f ${SElinux} ];then
+        echo "SELINUX=disabled">${SElinux}
 fi
 
 statusUpdate 'disabling' 'firewall'
 systemctl stop firewalld.service 1> /dev/null 2>&1
 systemctl disable firewalld.service 1> /dev/null 2>&1
+}
 
+
+function configurePasswordlessSSH(){
 statusUpdate 'checking' 'ssh'
 if [ -d $HOME/.ssh ];then
 rm -rf $HOME/.ssh
@@ -185,42 +175,47 @@ fi
 
 statusUpdate 'creating' 'ssh-keys'
 echo -e "\n\n\n"|ssh-keygen 1> /dev/null 2>&1
-cat /root/.ssh/id_rsa.pub>${AUTH_KEYS}
 
 cat <<EOF > ${SSH_CONFIG}
 Host *
         IdentitiesOnly yes
-	ServerAliveInterval 30
-	ServerAliveCountMax 10 
+        ServerAliveInterval 30
+        ServerAliveCountMax 10 
         StrictHostKeyChecking no
 EOF
 
 statusUpdate 'pinging' 'cp01'
 ping -c 1 cp01  1> /dev/null 2>&1
 
-statusUpdate 'Copying ssh-keys to' 'cp01'
 if [ $? -eq 0 ]; then
-cat ~/.ssh/id_rsa.pub | ssh cp01 "chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
+statusUpdate 'Copying ssh-keys to' 'cp01'
+cat ~/.ssh/id_rsa.pub | ssh cp01 "chmod 700 ~/.ssh && cat > ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
 ssh-add  1> /dev/null 2>&1
-ssh cp01 cat /root/.ssh/id_rsa.pub>>${AUTH_KEYS}
+ssh cp01 cat /root/.ssh/id_rsa.pub>${AUTH_KEYS}
 else
 echo "\n Error connecting to cp01 \n"
 fi
 
-scp ~/.ssh/authorized_keys cp01:/root/.ssh  1> /dev/null 2>&1
+#scp ~/.ssh/authorized_keys cp01:/root/.ssh  1> /dev/null 2>&1
+}
 
+
+function installVsftp(){
 statusUpdate 'Installing' 'vsftpd'
 if [ -d "${RPM_REPO}" ];then
-	vsftpd=$(ls "${RPM_REPO}"|grep vsftpd)
+        vsftpd=$(ls "${RPM_REPO}"|grep vsftpd)
         rpm -ivh "${RPM_REPO}/${vsftpd}"  1> /dev/null 2>&1
 else
-	exit 1
+        exit 1
 fi
 
 statusUpdate 'restarting' 'vsftpd'
 systemctl restart vsftpd 1> /dev/null 2>&1
 systemctl enable vsftpd 1> /dev/null 2>&1
+}
 
+
+function yumUsingFtp(){
 statusUpdate 'copying rpms repository to' 'ftp root'
 cp -r "${RPM_REPO}" ${FTP_ROOT}
 
@@ -251,6 +246,10 @@ statusUpdate 'installing' 'ftp on cp01'
 ftp=$(ls "${RPM_REPO}"|grep ftp)
 ssh cp01 "rpm -ivh '${RPM_REPO}'/${ftp} && yum clean all"
 
+}
+
+
+function addEpel(){
 statusUpdate 'adding' 'epel repolist'
 #Add epel to yum
 wget --no-check-certificate -q https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
@@ -266,7 +265,10 @@ fi
 
 rpm -ivh epel-release-latest-7.noarch.rpm 1> /dev/null 2>&1
 yum repolist 1> /dev/null 2>&1
+}
 
+
+function addProxy(){
 statusUpdate 'installing and configuring proxy'
 yum -y -q install squid 1> /dev/null 2>&1
 cat<< EOF > ${PROXY}
@@ -280,7 +282,10 @@ cache_mem 512 MB
 EOF
 systemctl restart squid
 systemctl enable squid
+}
 
+
+function addNFSandAutomount(){
 statusUpdate 'installing' 'nfs on cp01'
 ssh cp01 "yum -y -q install nfs-utils.x86_64 \
 && systemctl restart rpcbind \
@@ -325,11 +330,75 @@ ssh cp01 "yum install -y -q autofs.x86_64 \
 && sed -i 's/\/misc/\/glb/' /etc/auto.master \
 && sed -i 's/auto.misc/auto.home/' /etc/auto.master \
 && cat <<EOF > /etc/auto.home
-home	-fstype=nfs,rw,soft,intr    sp:/glb/home
-apps	-fstype=nfs,rw,soft,intr    sp:/glb/apps
+home    -fstype=nfs,rw,soft,intr    sp:/glb/home
+apps    -fstype=nfs,rw,soft,intr    sp:/glb/apps
 EOF"
 
 ssh cp01 "systemctl restart autofs && systemctl enable autofs"
+}
+
+
+case "$1" in
+        '1' ) configureNetwork;
+                exit 0;;
+        '2' ) configureNetwork;
+		configureDNS;
+                exit 0;;
+        '3' ) configureNetwork;
+		configureDNS;
+		disableNMandSElinux
+                exit 0;;
+        '4' ) configureNetwork;
+		configureDNS;
+		disableNMandSElinux;
+		configurePasswordlessSSH;
+                exit 0;;
+        '5' ) configureNetwork;
+		configureDNS;
+		disableNMandSElinux;
+		configurePasswordlessSSH;
+		installVsftp;		
+                exit 0;;
+        '6' ) configureNetwork;
+		configureDNS;
+		disableNMandSElinux;
+		configurePasswordlessSSH;
+		installVsftp;
+		yumUsingFtp;
+                exit 0;;
+        '7' ) configureNetwork;
+		configureDNS;
+		disableNMandSElinux;
+		configurePasswordlessSSH;
+		installVsftp;
+		yumUsingFtp;
+		addEpel;
+                exit 0;;
+        '8' ) configureNetwork;
+		configureDNS;
+		disableNMandSElinux;
+		configurePasswordlessSSH;
+		installVsftp;
+		yumUsingFtp;
+		addEpel;
+		addProxy;
+                exit 0;;
+        '9' ) configureNetwork;
+                configureDNS;
+                disableNMandSElinux;
+                configurePasswordlessSSH;
+                installVsftp;
+                yumUsingFtp;
+                addEpel;
+                addProxy;
+		addNFSandAutomount;
+                exit 0;;
+        '10') echo "10";
+                exit 10;;
+         * ) echo "wrong option: ""$1";
+                echo $USAGE;
+                exit 3;;
+esac
 
 statusUpdate 'installing and configuraing' 'nis'
 yum -y -q install ypserv.x86_64 1> /dev/null 2>&1
@@ -447,5 +516,4 @@ ssh cp01 "mkdir /var/spool/slurmd \
 && systemctl enable slurmd.service \
 && systemctl start slurmd.service"
 fi
-
 
