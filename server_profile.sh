@@ -220,7 +220,7 @@ statusUpdate 'copying rpms repository to' 'ftp root'
 cp -r "${RPM_REPO}" ${FTP_ROOT}
 
 statusUpdate 'creating' 'base repolist'
-createrepo=$(ls "${RPM_REPO}"|grep createrepo)
+createrepo=$(ls "${RPM_REPO}"|grep ^createrepo)
 rpm -ivh "${RPM_REPO}/${createrepo}"  1> /dev/null 2>&1
 createrepo ${FTP_ROOT} 1> /dev/null 2>&1
 
@@ -243,8 +243,9 @@ scp /etc/yum.repos.d/CentOS-base.repo cp01:/etc/yum.repos.d/ 1> /dev/null 2>&1
 #scp CentOS-Base.repo cp02:/etc/yum.repos.d/
 
 statusUpdate 'installing' 'ftp on cp01'
-ftp=$(ls "${RPM_REPO}"|grep ftp)
-ssh cp01 "rpm -ivh '${RPM_REPO}'/${ftp} && yum clean all"
+ftp=$(ls "${RPM_REPO}"|grep ^ftp)
+scp "${RPM_REPO}"/${ftp} cp01:~/
+ssh cp01 "rpm -ivh '${HOME}'/${ftp} && yum clean all"
 
 }
 
