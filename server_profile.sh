@@ -339,67 +339,7 @@ ssh cp01 "systemctl restart autofs && systemctl enable autofs"
 }
 
 
-case "$1" in
-        '1' ) configureNetwork;
-                exit 0;;
-        '2' ) configureNetwork;
-		configureDNS;
-                exit 0;;
-        '3' ) configureNetwork;
-		configureDNS;
-		disableNMandSElinux
-                exit 0;;
-        '4' ) configureNetwork;
-		configureDNS;
-		disableNMandSElinux;
-		configurePasswordlessSSH;
-                exit 0;;
-        '5' ) configureNetwork;
-		configureDNS;
-		disableNMandSElinux;
-		configurePasswordlessSSH;
-		installVsftp;		
-                exit 0;;
-        '6' ) configureNetwork;
-		configureDNS;
-		disableNMandSElinux;
-		configurePasswordlessSSH;
-		installVsftp;
-		yumUsingFtp;
-                exit 0;;
-        '7' ) configureNetwork;
-		configureDNS;
-		disableNMandSElinux;
-		configurePasswordlessSSH;
-		installVsftp;
-		yumUsingFtp;
-		addEpel;
-                exit 0;;
-        '8' ) configureNetwork;
-		configureDNS;
-		disableNMandSElinux;
-		configurePasswordlessSSH;
-		installVsftp;
-		yumUsingFtp;
-		addEpel;
-		addProxy;
-                exit 0;;
-        '9' ) configureNetwork;
-                configureDNS;
-                disableNMandSElinux;
-                configurePasswordlessSSH;
-                installVsftp;
-                yumUsingFtp;
-                addEpel;
-                addProxy;
-		addNFSandAutomount;
-                exit 0;;
-        '10') echo "10";
-                exit 10;;
-         * ) echo "wrong option: ""$1";
-                echo $USAGE;
-                exit 3;;
-esac
+function addNIS(){
 
 statusUpdate 'installing and configuraing' 'nis'
 yum -y -q install ypserv.x86_64 1> /dev/null 2>&1
@@ -423,6 +363,11 @@ ssh cp01 "yum -y -q install ypbind.x86_64 \
 
 make -C /var/yp/ 1> /dev/null 2>&1
 
+
+}
+
+
+function installAndConfigureSlurm(){
 ssh cp01 "rpm -ivh $HOME/epel-release-latest-7.noarch.rpm 1> /dev/null 2>&1"
 
 read -p "Install slurm? (y/N)? " choice
@@ -518,3 +463,79 @@ ssh cp01 "mkdir /var/spool/slurmd \
 && systemctl start slurmd.service"
 fi
 
+}
+
+
+case "$1" in
+        '1' ) configureNetwork;
+                exit 0;;
+        '2' ) configureNetwork;
+		configureDNS;
+                exit 0;;
+        '3' ) configureNetwork;
+		configureDNS;
+		disableNMandSElinux
+                exit 0;;
+        '4' ) configureNetwork;
+		configureDNS;
+		disableNMandSElinux;
+		configurePasswordlessSSH;
+                exit 0;;
+        '5' ) configureNetwork;
+		configureDNS;
+		disableNMandSElinux;
+		configurePasswordlessSSH;
+		installVsftp;		
+                exit 0;;
+        '6' ) configureNetwork;
+		configureDNS;
+		disableNMandSElinux;
+		configurePasswordlessSSH;
+		installVsftp;
+		yumUsingFtp;
+                exit 0;;
+        '7' ) configureNetwork;
+		configureDNS;
+		disableNMandSElinux;
+		configurePasswordlessSSH;
+		installVsftp;
+		yumUsingFtp;
+		addEpel;
+                exit 0;;
+        '8' ) configureNetwork;
+		configureDNS;
+		disableNMandSElinux;
+		configurePasswordlessSSH;
+		installVsftp;
+		yumUsingFtp;
+		addEpel;
+		addProxy;
+                exit 0;;
+        '9' ) configureNetwork;
+                configureDNS;
+                disableNMandSElinux;
+                configurePasswordlessSSH;
+                installVsftp;
+                yumUsingFtp;
+                addEpel;
+                addProxy;
+		addNFSandAutomount;
+                exit 0;;
+        '10'| '') configureNetwork;
+                configureDNS;
+                disableNMandSElinux;
+                configurePasswordlessSSH;
+                installVsftp;
+                yumUsingFtp;
+                addEpel;
+                addProxy;
+                addNFSandAutomount;
+		addNIS;
+		installAndConfigureSlurm;
+		exit 0;;
+	'-h'|'--help') echo $USAGE;
+			exit 0;;
+         * ) echo "wrong option: ""$1";
+                echo $USAGE;
+                exit 1;;
+esac
