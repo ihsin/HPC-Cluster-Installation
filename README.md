@@ -1,4 +1,4 @@
-<h3>Automates HPC environment configurations with slurm as schedular on GNOME Desktop installation of CentOS 7 on Virtualized Platform.</h3>
+<h3>Automates HPC environment configurations with slurm as schedular on CentOS 7 on Virtualized Platform.</h3>
 
 Requirequirements:
 1. Virtualization Software (e.g. <a href="https://www.vmware.com/in/products/workstation-pro/workstation-pro-evaluation.html">VMware</a>)
