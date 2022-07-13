@@ -32,7 +32,7 @@ if [[ $UID != "0" ]]; then
 fi
 
 if [ $# -gt 1 ];then
-echo $USAGE
+echo "$USAGE"
 exit 0
 fi
 
@@ -533,9 +533,9 @@ case "$1" in
 		addNIS;
 		installAndConfigureSlurm;
 		exit 0;;
-	'-h'|'--help') echo $USAGE;
+	'-h'|'--help') echo "$USAGE";
 			exit 0;;
          * ) echo "wrong option: ""$1";
-                echo $USAGE;
+                echo "$USAGE";
                 exit 1;;
 esac
