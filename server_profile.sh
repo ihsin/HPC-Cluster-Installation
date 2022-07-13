@@ -25,81 +25,6 @@ EOF
 )
 
 
-case "$1" in
-        '1' ) configureNetwork;
-                exit 0;;
-        '2' ) configureNetwork;
-		configureDNS;
-                exit 0;;
-        '3' ) configureNetwork;
-		configureDNS;
-		disableNMandSElinux
-                exit 0;;
-        '4' ) configureNetwork;
-		configureDNS;
-		disableNMandSElinux;
-		configurePasswordlessSSH;
-                exit 0;;
-        '5' ) configureNetwork;
-		configureDNS;
-		disableNMandSElinux;
-		configurePasswordlessSSH;
-		installVsftp;		
-                exit 0;;
-        '6' ) configureNetwork;
-		configureDNS;
-		disableNMandSElinux;
-		configurePasswordlessSSH;
-		installVsftp;
-		yumUsingFtp;
-                exit 0;;
-        '7' ) configureNetwork;
-		configureDNS;
-		disableNMandSElinux;
-		configurePasswordlessSSH;
-		installVsftp;
-		yumUsingFtp;
-		addEpel;
-                exit 0;;
-        '8' ) configureNetwork;
-		configureDNS;
-		disableNMandSElinux;
-		configurePasswordlessSSH;
-		installVsftp;
-		yumUsingFtp;
-		addEpel;
-		addProxy;
-                exit 0;;
-        '9' ) configureNetwork;
-                configureDNS;
-                disableNMandSElinux;
-                configurePasswordlessSSH;
-                installVsftp;
-                yumUsingFtp;
-                addEpel;
-                addProxy;
-		addNFSandAutomount;
-                exit 0;;
-        '10'| '') configureNetwork;
-                configureDNS;
-                disableNMandSElinux;
-                configurePasswordlessSSH;
-                installVsftp;
-                yumUsingFtp;
-                addEpel;
-                addProxy;
-                addNFSandAutomount;
-		addNIS;
-		installAndConfigureSlurm;
-		exit 0;;
-	'-h'|'--help') echo "$USAGE";
-			exit 0;;
-         * ) echo "wrong option: ""$1";
-                echo "$USAGE";
-                exit 1;;
-esac
-
-
 #Check if script is running with root permissions
 if [[ $UID != "0" ]]; then
   echo "Sorry, must be root to run this."
@@ -539,3 +464,78 @@ ssh cp01 "mkdir /var/spool/slurmd \
 fi
 
 }
+
+
+case "$1" in
+        '1' ) configureNetwork;
+                exit 0;;
+        '2' ) configureNetwork;
+		configureDNS;
+                exit 0;;
+        '3' ) configureNetwork;
+		configureDNS;
+		disableNMandSElinux
+                exit 0;;
+        '4' ) configureNetwork;
+		configureDNS;
+		disableNMandSElinux;
+		configurePasswordlessSSH;
+                exit 0;;
+        '5' ) configureNetwork;
+		configureDNS;
+		disableNMandSElinux;
+		configurePasswordlessSSH;
+		installVsftp;		
+                exit 0;;
+        '6' ) configureNetwork;
+		configureDNS;
+		disableNMandSElinux;
+		configurePasswordlessSSH;
+		installVsftp;
+		yumUsingFtp;
+                exit 0;;
+        '7' ) configureNetwork;
+		configureDNS;
+		disableNMandSElinux;
+		configurePasswordlessSSH;
+		installVsftp;
+		yumUsingFtp;
+		addEpel;
+                exit 0;;
+        '8' ) configureNetwork;
+		configureDNS;
+		disableNMandSElinux;
+		configurePasswordlessSSH;
+		installVsftp;
+		yumUsingFtp;
+		addEpel;
+		addProxy;
+                exit 0;;
+        '9' ) configureNetwork;
+                configureDNS;
+                disableNMandSElinux;
+                configurePasswordlessSSH;
+                installVsftp;
+                yumUsingFtp;
+                addEpel;
+                addProxy;
+		addNFSandAutomount;
+                exit 0;;
+        '10'| '') configureNetwork;
+                configureDNS;
+                disableNMandSElinux;
+                configurePasswordlessSSH;
+                installVsftp;
+                yumUsingFtp;
+                addEpel;
+                addProxy;
+                addNFSandAutomount;
+		addNIS;
+		installAndConfigureSlurm;
+		exit 0;;
+	'-h'|'--help') echo "$USAGE";
+			exit 0;;
+         * ) echo "wrong option: ""$1";
+                echo "$USAGE";
+                exit 1;;
+esac
