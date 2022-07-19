@@ -386,12 +386,13 @@ if [ ! -z $slurm ];then
 statusUpdate 'Installing' 'munge'
 yum -y -q install munge 1> /dev/null 2>&1
 ssh cp01 "bash -c 'yum -y -q install munge'" 1>/dev/null 2>&1
-if [ ! -f "$HOME/slurm-20.11.2.tar.bz2" ]; then
+SLURM_TAR=$(curl -s -L https://download.schedmd.com/slurm|grep -oE "slurm-[0-9]{2}\.[0-9]{2}\.[0-9]\.tar\.bz2"|head -n 1)
+if [ ! -f "$HOME/${SLURM_TAR}" ]; then
 echo -e "Warn: Slurm source file missing in root directory"
 echo -e "Downloading it"
-wget --no-check-certificate  https://download.schedmd.com/slurm/slurm-20.11.2.tar.bz2 1> /dev/null 2>&1
-tar -xjf $HOME/slurm-20.11.2.tar.bz2
+wget --no-check-certificate  https://download.schedmd.com/slurm/"${SLURM_TAR}" 1> /dev/null 2>&1
 fi
+tar -xjf $HOME/${SLURM_TAR}
 
 statusUpdate 'Creating and copying' 'munge random key'
 /usr/sbin/create-munge-key 1> /dev/null 2>&1
@@ -422,12 +423,12 @@ cd $HOME/Python-3.0.1/
 statusUpdate "installing" "slurm: THIS WILL TAKE FEW MINUTES"
 ln -s /glb/apps/python3/bin/python3.0 /glb/apps/python3/bin/python3
 export PATH=$PATH:/glb/apps/python3/bin/
-cd $HOME/slurm-20.11.2/
+cd $HOME/${SLURM_TAR}/
 ./configure --prefix=/glb/apps/slurm && make && make install
 
 statusUpdate "configuring and setting" "permissions on sp"
 mkdir -p /glb/apps/slurm/etc/
-cp $HOME/slurm-20.11.2/etc/slurm.conf.example /glb/apps/slurm/etc/slurm.conf
+cp $HOME/${SLURM_TAR}/etc/slurm.conf.example /glb/apps/slurm/etc/slurm.conf
 chown slurm: /glb/apps/slurm/etc/slurm.conf
 mkdir /var/spool/slurmctld
 chown slurm:  /var/spool/slurmctld
@@ -436,7 +437,7 @@ mkdir  /var/log/slurm
 touch /var/log/slurm/slurmctld.log
 touch /var/log/slurm/slurm_jobacct.log /var/log/slurm/slurm_jobcomp.log
 chown -R slurm:  /var/log/slurm/
-cp -p $HOME/slurm-20.11.2/etc/slurmctld.service /etc/systemd/system/
+cp -p $HOME/${SLURM_TAR}/etc/slurmctld.service /etc/systemd/system/
 chmod +x /etc/systemd/system/slurmctld.service
 systemctl enable slurmctld.service
 systemctl start slurmctld.service
@@ -450,7 +451,7 @@ export LD_LIBRARY_PATH=/glb/apps/slurm/lib:$LD_LIBRARY_PATH
 EOF
 
 statusUpdate "configuring and setting" "permissions on cp01"
-scp $HOME/slurm-20.11.2/etc/slurmd.service cp01:/etc/systemd/system/
+scp $HOME/${SLURM_TAR}/etc/slurmd.service cp01:/etc/systemd/system/
 
 ssh cp01 "mkdir /var/spool/slurmd \
 && chown slurm: /var/spool/slurmd \
