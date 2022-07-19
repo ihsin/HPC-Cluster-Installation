@@ -423,12 +423,12 @@ cd $HOME/Python-3.0.1/
 statusUpdate "installing" "slurm: THIS WILL TAKE FEW MINUTES"
 ln -s /glb/apps/python3/bin/python3.0 /glb/apps/python3/bin/python3
 export PATH=$PATH:/glb/apps/python3/bin/
-cd $HOME/${SLURM_TAR}/
+cd $HOME/${SLURM_TAR%.tar.bz2}/
 ./configure --prefix=/glb/apps/slurm && make && make install
 
 statusUpdate "configuring and setting" "permissions on sp"
 mkdir -p /glb/apps/slurm/etc/
-cp $HOME/${SLURM_TAR}/etc/slurm.conf.example /glb/apps/slurm/etc/slurm.conf
+cp $HOME/${SLURM_TAR%.tar.bz2}/etc/slurm.conf.example /glb/apps/slurm/etc/slurm.conf
 chown slurm: /glb/apps/slurm/etc/slurm.conf
 mkdir /var/spool/slurmctld
 chown slurm:  /var/spool/slurmctld
@@ -437,7 +437,7 @@ mkdir  /var/log/slurm
 touch /var/log/slurm/slurmctld.log
 touch /var/log/slurm/slurm_jobacct.log /var/log/slurm/slurm_jobcomp.log
 chown -R slurm:  /var/log/slurm/
-cp -p $HOME/${SLURM_TAR}/etc/slurmctld.service /etc/systemd/system/
+cp -p $HOME/${SLURM_TAR%.tar.bz2}/etc/slurmctld.service /etc/systemd/system/
 chmod +x /etc/systemd/system/slurmctld.service
 systemctl enable slurmctld.service
 systemctl start slurmctld.service
@@ -451,7 +451,7 @@ export LD_LIBRARY_PATH=/glb/apps/slurm/lib:$LD_LIBRARY_PATH
 EOF
 
 statusUpdate "configuring and setting" "permissions on cp01"
-scp $HOME/${SLURM_TAR}/etc/slurmd.service cp01:/etc/systemd/system/
+scp $HOME/${SLURM_TAR%.tar.bz2}/etc/slurmd.service cp01:/etc/systemd/system/
 
 ssh cp01 "mkdir /var/spool/slurmd \
 && chown slurm: /var/spool/slurmd \
