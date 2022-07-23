@@ -437,7 +437,7 @@ mkdir  /var/log/slurm
 touch /var/log/slurm/slurmctld.log
 touch /var/log/slurm/slurm_jobacct.log /var/log/slurm/slurm_jobcomp.log
 chown -R slurm:  /var/log/slurm/
-cp -p $HOME/${SLURM_TAR%.tar.bz2}/etc/slurmctld.service /etc/systemd/system/
+cp  $HOME/${SLURM_TAR%.tar.bz2}/etc/slurmctld.service.in /etc/systemd/system/slurmctld.service
 chmod +x /etc/systemd/system/slurmctld.service
 systemctl enable slurmctld.service
 systemctl start slurmctld.service
